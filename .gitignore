@@ -1,0 +1,12 @@
+
+*.~~a
+*.~rl
+*.~cc
+*.~as
+*.bin
+*.map
+*.exe
+*.obj
+*.prn
+*.asm
+*.abs
