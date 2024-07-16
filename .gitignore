@@ -11,3 +11,4 @@
 *.asm
 *.abs
 *.HEX
+src/main.pro
