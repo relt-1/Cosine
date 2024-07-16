@@ -45,9 +45,6 @@ DW _rt
 DW _rt
 DW _rt
 DW _rt
-DW _rt
-DW _rt
-DW _rt
 
 $$start_up:
 	b _main

@@ -52,41 +52,46 @@ void drawbitmap(const byte* ptr, word offset, byte width, byte height,int color)
 void print(const byte* str, word x, word y,int color)
 {
 	const byte* what = str;
-	word curoffset = x+y*312;
-	byte* charptr;
-	word i = 0;
+	word curoffset = x+(y<<8)+(y<<7);
+	//word i = 0;
+	//derefw(0xB510) = (word)(what);
 	while(*what)
 	{
-		deref(0xB500) = (word)what;
-		charptr = image_raw;
-		charptr += ((word)(*what)<<4);
-		drawbitmap(charptr,curoffset,1,16,color);
+		//deref(0xB500+i) = *what;
+
+		drawbitmap(image_raw+((word)(*what)<<4),curoffset,1,16);
 		++curoffset;
 		++what;
+		//++i;
 	}
 }
 
+
+
+const byte why[] = "Hello world!";
 void CheckButtons()
 {
-	drawbitmap((byte*)0xf040,384,192,16,2);
-	/*
 	byte x;
 	byte y;
-	
-	for(x = 1; x != 0; x = x << 1)
+	char b[] = "a";
+	for(x = 0x80; x != 0; x = x >> 1)
 	{
 		deref(0xf046) = x;
-		for(y = 1; y != 0; y = y << 1)
+		for(y = 0x80; y != 0; y = y >> 1)
 		{
-			if(deref(0xf040) & y)
+			if((deref(0xf040) & y) == 0)
 			{
-				print(why,0,1);
+				b[0] = y;
+				print(b,0,1);
+				b[0] = x;
+				print(b,0,2);
+				break;
 			}
 		}
 	}
-	*/
 }
-const byte why[] = "Hello world!";
+
+
 void main()
 {
 	word i = 0;
@@ -107,6 +112,7 @@ void main()
 	//{
 		print(why,0,0,2);
 		//CheckButtons();
+
 		//drawbitmap(image_raw+(i&0xfff),i&0x1ff,1,16);
 		//i += 1;
 	//}
