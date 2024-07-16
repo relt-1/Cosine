@@ -114,60 +114,134 @@ enum BUTTON
 	B_6 = 0x2e,
 	B_7 = 0x3d,
 	B_8 = 0x35,
-	B_9 = 0x2d
+	B_9 = 0x2d,
+	
+	B_A = 0x3c,
+	B_B = 0x34,
+	B_C = 0x2c,
+	B_D = 0x24,
+	B_E = 0x1c,
+	B_F = 0x14,
+	
+	B_G = 0x3d,
+	B_H = 0x35,
+	B_I = 0x2d,
+	B_J = 0x25,
+	B_K = 0x1d,
+	
+	B_L = 0x3e,
+	B_M = 0x36,
+	B_N = 0x2e,
+	B_O = 0x26,
+	B_P = 0x1e,
+	
+	B_Q = 0x3f,
+	B_R = 0x37,
+	B_S = 0x2f,
+	B_T = 0x27,
+	B_U = 0x1f,
+	
+	B_V = 0xb,
+	B_W = 0xc,
+	B_X = 0xd,
+	B_Y = 0xe,
+	B_Z = 0xf,
+	
+	
+	
+	BUTTON_COUNT = 0x40
+};
+
+enum SPECIAL_CHARS
+{
+	SP_EXE = '\n',
+	SP_TAB = '\t',
+	SP_SPACE = ' ',
+	SP_BACKSPACE = '\b',
+	
+	SP_HOME = 0x80,
+	SP_END,
+	SP_YES,
+	SP_NO,
+	SP_OK,
+	SP_UP,
+	SP_DOWN,
+	SP_LEFT,
+	SP_RIGHT,
+	SP_PLUS,
+	SP_MINUS,
+	SP_ALT,
+	SP_ABC,
+	SP_ESC,
+	SP_SELECTLEFT,
+	SP_SELECTRIGHT,
+	SP_PASTE,
+	SP_COPY,
+	
+	SPECIAL_MAX
 };
 
 const byte button_to_char[64] = {
-	0,   0,   0,   0,   0,   0,   0,   0,
-	0,   0,   0, '0',   0,   0,   0,   0,
-	0,   0,   0,   0,   0,   0,   0,   0,
-	0,   0,   0,   0,   0,   0,   0,   0,
-	0,   0,   0,   0,   0,   0,   0,   0,
-	0,   0,   0,   0,   0, '9', '6', '3',
-	0,   0,   0,   0,   0, '8', '5', '2',
-	0,   0,   0,   0,   0, '7', '4', '1',
+	  0,        0,       0,    0,    0,    0,   0,    0,
+	  0,        0,       0,  '0',  ' ',  ',', '.', '\n',
+SP_PLUS, SP_MINUS,   SP_NO,  ']',  ')',    0,   0,    0,
+	  0, SP_RIGHT,  SP_END,  '[',  '(', '\b', '#',  '%',
+  SP_UP,    SP_OK, SP_DOWN, '\'',  '/',  '!', '@',  '$',
+	  0,  SP_LEFT, SP_HOME,  ';', '\\',  '9', '6',  '3',
+ SP_ABC,   SP_ALT,     '*',  '-',  '=',  '8', '5',  '2',
+	  0,   SP_ESC,  SP_YES, '\t',  '`',  '7', '4',  '1',
 };
 
-byte tempprintpos = 0;
-byte lastbutton = 0x50;
-void CheckButtons()
+const byte button_to_char_abc[64] = {
+	0,   0,   0,   0,   0,   0,   0,   0,
+	0,   0,   0, 'V', 'W', 'X', 'Y', 'Z',
+	0,   0,   0,   0, 'F',   0,   0,   0,
+	0,   0,   0,   0, 'E', 'K', 'P', 'U',
+	0,   0,   0,   0, 'D', 'J', 'O', 'T',
+	0,   0,   0,   0, 'C', 'I', 'N', 'S',
+	0,   0,   0,   0, 'B', 'H', 'M', 'R',
+	0,   0,   0,   0, 'A', 'G', 'L', 'Q',
+};
+
+const byte button_to_char_alt[64] = {
+	0,              0,        0,   0,   0,   0,   0,   0,
+	0,              0,        0,   0,   0, '<', '>',   0,
+	0,              0, SP_PASTE, '}', '^',   0,   0,   0,
+	0, SP_SELECTRIGHT,        0, '{', '*',   0,   0,   0,
+	0,              0,        0, '"', '?',   0,   0,   0,
+	0,  SP_SELECTLEFT,        0, ':', '|',   0,   0,   0,
+	0,              0,      '&', '_', '+',   0,   0,   0,
+	0,              0,  SP_COPY,   0, '~',   0,   0,   0,
+};
+
+byte lastbutton = 0xff;
+byte CheckButtons()
 {
 	byte x;
 	byte y;
-	byte b[] = "0";
-	byte x2 = 0;
-	byte y2;
 	byte i = 0;
 	for(x = 0x80; x != 0; x = x >> 1)
 	{
 		deref(0xf046) = x;
-		y2 = 0;
 		for(y = 0x80; y != 0; y = y >> 1)
 		{
 			if((deref(0xf040) & y) == 0)
 			{
 				if(i != lastbutton)
 				{
-					b[0] = button_to_char[i];
-					tempprintpos += print(b,tempprintpos,0,2);
-					b[0] = '0'+x2;
-					print(b,0,1,2);
-					b[0] = '0'+y2;
-					print(b,0,2,2);
-					print("  ",0,3,2);
-					PrintWord(i,0,3,2);
 					lastbutton = i;
+					return i;
 				}
-				return;
+				return 0xff;
 			}
 			++i;
-			++y2;
 		}
-		++x2;
 	}
 	lastbutton = 0x50;
+	return 0xff;
 }
 
+char tempbuffer[2] = " ";
 
 void main()
 {
@@ -187,7 +261,13 @@ void main()
 	
 	while(1)
 	{
-		CheckButtons();
+		byte pressedbutton = CheckButtons();
+		if(pressedbutton == 0xff)
+		{
+			continue;
+		}
+		tempbuffer[0] = button_to_char[pressedbutton];
+		print(tempbuffer,0,0,2);
 	}
 	/*
 	deref(0xf037) = 0;
