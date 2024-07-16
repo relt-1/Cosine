@@ -59,7 +59,7 @@ void print(const byte* str, word x, word y,int color)
 	{
 		//deref(0xB500+i) = *what;
 
-		drawbitmap(image_raw+((word)(*what)<<4),curoffset,1,16);
+		drawbitmap(image_raw+((word)(*what)<<4),curoffset,1,16,color);
 		++curoffset;
 		++what;
 		//++i;
@@ -82,9 +82,9 @@ void CheckButtons()
 			if((deref(0xf040) & y) == 0)
 			{
 				b[0] = y;
-				print(b,0,1);
+				print(b,0,1,2);
 				b[0] = x;
-				print(b,0,2);
+				print(b,0,2,2);
 				break;
 			}
 		}
