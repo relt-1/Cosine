@@ -129,7 +129,7 @@ const byte button_to_char[64] = {
 };
 
 byte tempprintpos = 0;
-
+byte lastbutton = 0x50;
 void CheckButtons()
 {
 	byte x;
@@ -146,21 +146,26 @@ void CheckButtons()
 		{
 			if((deref(0xf040) & y) == 0)
 			{
-				b[0] = button_to_char[i];
-				tempprintpos += print(b,tempprintpos,0,2);
-				b[0] = '0'+x2;
-				print(b,0,1,2);
-				b[0] = '0'+y2;
-				print(b,0,2,2);
-				print("  ",0,3,2);
-				PrintWord(i,0,3,2);
-				break;
+				if(i != lastbutton)
+				{
+					b[0] = button_to_char[i];
+					tempprintpos += print(b,tempprintpos,0,2);
+					b[0] = '0'+x2;
+					print(b,0,1,2);
+					b[0] = '0'+y2;
+					print(b,0,2,2);
+					print("  ",0,3,2);
+					PrintWord(i,0,3,2);
+					lastbutton = i;
+				}
+				return;
 			}
 			++i;
 			++y2;
 		}
 		++x2;
 	}
+	lastbutton = 0x50;
 }
 
 
@@ -180,13 +185,9 @@ void main()
 	deref(0xf039) = 0;
 	deref(0xf03d) = 0x07;
 	
-	while(1) //I dont think this is needed for a signle print... 
+	while(1)
 	{
-		//print(why,0,0,2);
 		CheckButtons();
-
-		//drawbitmap(image_raw+(i&0xfff),i&0x1ff,1,16);
-		//i += 1;
 	}
 	/*
 	deref(0xf037) = 0;
