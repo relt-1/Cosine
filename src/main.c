@@ -49,12 +49,12 @@ void drawbitmap(const byte* ptr, word offset, byte width, byte height,int color)
 
 
 
-void print(const byte* str, word x, word y,int color)
+word print(const byte* str, byte x, byte y,byte color)
 {
 	const byte* what = str;
-	word curoffset = x+(y<<8)+(y<<7);
-	//word i = 0;
+	word curoffset = (word)x+((word)y<<8)+((word)y<<7);
 	//derefw(0xB510) = (word)(what);
+	word i = 0;
 	while(*what)
 	{
 		//deref(0xB500+i) = *what;
@@ -62,32 +62,104 @@ void print(const byte* str, word x, word y,int color)
 		drawbitmap(image_raw+((word)(*what)<<4),curoffset,1,16,color);
 		++curoffset;
 		++what;
+		++i;
 		//++i;
 	}
+	return i;
 }
 
+char printdwordbuf[5] = "\x00\x00\x00\x00";
 
+void PrintWord(word num, byte x, byte y, byte color)
+{
+	byte luup = 0;
+	byte* out = &printdwordbuf[3];
+	for(luup = 0; luup < 3; luup++)
+	{
+		if((num&0xf) > 0x9)
+		{
+			*out = 'a'+(num&0xf)-0xa;
+		}
+		else
+		{
+			*out = '0'+(num&0xf);
+		}
+		num = num>>4;
+		if(!num)
+		{
+			print(out,x,y,color);
+			return;
+		}
+		out--;
+	}
+	if((num&0xf) > 0x9)
+	{
+		*out = 'a'+(num&0xf)-0xa;
+	}
+	else
+	{
+		*out = '0'+(num&0xf);
+	}
+	print(out,x,y,color);
+}
 
-const byte why[] = "Hello world!";
+enum BUTTON
+{
+	B_0 = 0xb,
+	B_1 = 0x3f,
+	B_2 = 0x37,
+	B_3 = 0x2f,
+	B_4 = 0x3e,
+	B_5 = 0x36,
+	B_6 = 0x2e,
+	B_7 = 0x3d,
+	B_8 = 0x35,
+	B_9 = 0x2d
+};
+
+const byte button_to_char[64] = {
+	0,   0,   0,   0,   0,   0,   0,   0,
+	0,   0,   0, '0',   0,   0,   0,   0,
+	0,   0,   0,   0,   0,   0,   0,   0,
+	0,   0,   0,   0,   0,   0,   0,   0,
+	0,   0,   0,   0,   0,   0,   0,   0,
+	0,   0,   0,   0,   0, '9', '6', '3',
+	0,   0,   0,   0,   0, '8', '5', '2',
+	0,   0,   0,   0,   0, '7', '4', '1',
+};
+
+byte tempprintpos = 0;
+
 void CheckButtons()
 {
 	byte x;
 	byte y;
-	char b[] = "a";
+	byte b[] = "0";
+	byte x2 = 0;
+	byte y2;
+	byte i = 0;
 	for(x = 0x80; x != 0; x = x >> 1)
 	{
 		deref(0xf046) = x;
+		y2 = 0;
 		for(y = 0x80; y != 0; y = y >> 1)
 		{
 			if((deref(0xf040) & y) == 0)
 			{
-				b[0] = y;
+				b[0] = button_to_char[i];
+				tempprintpos += print(b,tempprintpos,0,2);
+				b[0] = '0'+x2;
 				print(b,0,1,2);
-				b[0] = x;
+				b[0] = '0'+y2;
 				print(b,0,2,2);
+				print("  ",0,3,2);
+				PrintWord(i,0,3,2);
 				break;
 			}
+			++i;
+			++y2;
 		}
+		++x2;
 	}
 }
 
@@ -108,14 +180,14 @@ void main()
 	deref(0xf039) = 0;
 	deref(0xf03d) = 0x07;
 	
-	//while(1) //I dont think this is needed for a signle print... 
-	//{
-		print(why,0,0,2);
-		//CheckButtons();
+	while(1) //I dont think this is needed for a signle print... 
+	{
+		//print(why,0,0,2);
+		CheckButtons();
 
 		//drawbitmap(image_raw+(i&0xfff),i&0x1ff,1,16);
 		//i += 1;
-	//}
+	}
 	/*
 	deref(0xf037) = 0;
 	for(i = 0; i < 2048; i++)
