@@ -1,12 +1,17 @@
 #include "base.h"
 #include "thefont.h"
 
-void drawbitmap(const byte* ptr, word offset, byte width, byte height)
+void drawbitmap(const byte* ptr, word offset, byte width, byte height,int color)
 {
 	word x;
 	word y;
 	word i = 0;
 	word j = 0;
+	deref(0xF037) = 0;
+	if(color == 1)
+	{
+		deref(0xF037) = 4;
+	} 
 	for(y = 0; y < offset; y++)
 	{
 		++j;
@@ -20,6 +25,12 @@ void drawbitmap(const byte* ptr, word offset, byte width, byte height)
 	{
 		for(x = 0; x < width; x++)
 		{	
+			if(color == 2)
+			{
+				deref(0xF037) = 0;
+				deref(0xf800+j) = ptr[i];
+				deref(0xF037) = 4;
+			}
 			deref(0xf800+j) = ptr[i];
 			++j;
 			if((j&0x1f) == 0x18)
@@ -38,18 +49,18 @@ void drawbitmap(const byte* ptr, word offset, byte width, byte height)
 
 
 
-void print(const byte* str, word x, word y)
+void print(const byte* str, word x, word y,int color)
 {
 	const byte* what = str;
-	word curoffset = x+y*384;
+	word curoffset = x+y*312;
 	byte* charptr;
 	word i = 0;
 	while(*what)
 	{
-		derefw(0xB500) = (word)what;
+		deref(0xB500) = (word)what;
 		charptr = image_raw;
 		charptr += ((word)(*what)<<4);
-		drawbitmap(charptr,curoffset,1,16);
+		drawbitmap(charptr,curoffset,1,16,color);
 		++curoffset;
 		++what;
 	}
@@ -57,7 +68,7 @@ void print(const byte* str, word x, word y)
 
 void CheckButtons()
 {
-	drawbitmap((byte*)0xf040,384,192,16);
+	drawbitmap((byte*)0xf040,384,192,16,2);
 	/*
 	byte x;
 	byte y;
@@ -92,13 +103,13 @@ void main()
 	deref(0xf039) = 0;
 	deref(0xf03d) = 0x07;
 	
-	while(1)
-	{
-		print(why,0,0);
+	//while(1) //I dont think this is needed for a signle print... 
+	//{
+		print(why,0,0,2);
 		//CheckButtons();
 		//drawbitmap(image_raw+(i&0xfff),i&0x1ff,1,16);
 		//i += 1;
-	}
+	//}
 	/*
 	deref(0xf037) = 0;
 	for(i = 0; i < 2048; i++)
