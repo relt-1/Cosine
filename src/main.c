@@ -1,6 +1,21 @@
 #include "base.h"
 #include "thefont.h"
 
+void invert_line(const word line)
+{
+	word i = 0;
+	word j = 0;
+	word offset = (line<<9);
+	for(i = 0; i < 512; i++)
+	{
+		deref(0xF037) = 0;
+		deref(0xF800+i+offset) = (~deref(0xF800+i+offset));
+		deref(0xF037) = 4;
+		deref(0xF800+i+offset) = (~deref(0xF800+i+offset));
+	}
+}
+
+
 void drawbitmap(const byte* ptr, word offset, byte width, byte height,int color)
 {
 	word x;
@@ -160,19 +175,19 @@ enum SPECIAL_CHARS
 	SP_BACKSPACE = '\b',
 	
 	SP_HOME = 0x80,
-	SP_END,
-	SP_YES,
-	SP_NO,
-	SP_OK,
-	SP_UP,
-	SP_DOWN,
-	SP_LEFT,
-	SP_RIGHT,
-	SP_PLUS,
-	SP_MINUS,
-	SP_ALT,
-	SP_ABC,
-	SP_ESC,
+	SP_END = 0x1A,
+	SP_YES = 0x3A,
+	SP_NO = 0x12,
+	SP_OK = 0x21,
+	SP_UP = 0x20,
+	SP_DOWN = 0x22,
+	SP_LEFT = 0x29,
+	SP_RIGHT = 0x19,
+	SP_PLUS = 0x10,
+	SP_MINUS = 0x11,
+	SP_ALT = 0x31,
+	SP_ABC = 0x30,
+	SP_ESC = 0x39,
 	SP_SELECTLEFT,
 	SP_SELECTRIGHT,
 	SP_PASTE,
@@ -180,7 +195,6 @@ enum SPECIAL_CHARS
 	
 	SPECIAL_MAX
 };
-
 const byte button_to_char[64] = {
 	  0,        0,       0,    0,    0,    0,   0,    0,
 	  0,        0,       0,  '0',  ' ',  ',', '.', '\n',
@@ -241,13 +255,16 @@ byte CheckButtons()
 	return 0xff;
 }
 
-char tempbuffer[2] = " ";
-
+byte tempbuffer[2] = " ";
+char filename[] = " ";
 void main()
 {
+	char filename[] = "Test.txt";
+	byte KEY_ABC = 0;
+	byte KEY_ALT = 0;
 	word i = 0;
-	//const byte why[] = {'H','e','l','l','o','\x00'};
-	
+	word j = 1;
+
 	deref(0xf030) = 4;
 	deref(0xf031) = 0x55;
 	deref(0xf032) = 0x12;
@@ -258,7 +275,21 @@ void main()
 	deref(0xf037) = 0x04;
 	deref(0xf039) = 0;
 	deref(0xf03d) = 0x07;
-	
+
+	//very sloppy text editor
+	//My emu has alot of junk on screen, clearing both screen buffers helps.
+	deref(0xf037) = 0;
+	for(i = 0; i < 2048; i++)
+	{
+		deref(0xf800+i) = 0x00;
+	}
+	deref(0xf037) = 4;
+	for(i = 0; i < 2048; i++)
+	{
+		deref(0xf800+i) = 0x00;
+	}
+	print(filename,0,0,1); //test
+	invert_line(0); //test
 	while(1)
 	{
 		byte pressedbutton = CheckButtons();
@@ -266,8 +297,50 @@ void main()
 		{
 			continue;
 		}
-		tempbuffer[0] = button_to_char[pressedbutton];
-		print(tempbuffer,0,0,2);
+
+		if(pressedbutton == SP_DOWN)
+		{
+			j--;
+			i = 0;
+			continue;
+		} else if(pressedbutton == SP_UP) {
+			j++;
+			i = 0;
+			continue;
+		} else if(pressedbutton == SP_LEFT) {
+			i--;
+			continue;
+		} else if(pressedbutton == SP_RIGHT) {
+			i++;
+			continue;
+		} else if(pressedbutton == SP_ABC) {
+			KEY_ABC = (~KEY_ABC);
+			KEY_ALT = 0;
+		} else if(pressedbutton == SP_ALT) {
+			KEY_ALT = (~KEY_ALT);
+			KEY_ABC = 0;
+		} else {
+			if(KEY_ABC)
+			{
+				tempbuffer[0] = button_to_char_abc[pressedbutton];
+			} else if(KEY_ALT) {
+				tempbuffer[0] = button_to_char_alt[pressedbutton];
+			} else {
+				tempbuffer[0] = button_to_char[pressedbutton];
+			}
+			print(tempbuffer,i,j,2);
+			deref(0xE000+i+(j*24)) = tempbuffer[0];
+			
+			i++;
+			
+			if(i == 23)
+			{
+				i = 0;
+				j++;
+			}
+		}
+		//PrintWord(tempbuffer,0,1,2);
+	
 	}
 	/*
 	deref(0xf037) = 0;
